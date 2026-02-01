@@ -13,10 +13,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
   void initState() {
     super.initState();
     notificationServices.requestNotificationPermission();
+    notificationServices.firebaseInit();
+    // notificationServices.isTokenRefresh();
+    notificationServices.getDeviceToken().then((value) {
+      print("Device Token: $value");
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blueAccent,
+        title: Text("Notification Services"),
+      ),
+      body: Center(child: Text("Firebase Notification Services")),
+    );
   }
 }
