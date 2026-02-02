@@ -13,7 +13,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   void initState() {
     super.initState();
     notificationServices.requestNotificationPermission();
-    notificationServices.firebaseInit();
+    notificationServices.firebaseInit(context);
+    notificationServices.setupInteractMessage(context);
     // notificationServices.isTokenRefresh();
     notificationServices.getDeviceToken().then((value) {
       print("Device Token: $value");

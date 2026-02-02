@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:math';
 
+import 'package:firebase/message_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +33,8 @@ class NotificationServices {
   }
 
   void initLocalNotifications(
-    // BuildContext context,
-    // RemoteMessage message,
+    BuildContext context,
+    RemoteMessage message,
   ) async {
     var androidInitializationSettings = const AndroidInitializationSettings(
       "@mipmap/ic_launcher",
@@ -45,7 +47,9 @@ class NotificationServices {
     );
     await _firebaseLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse: (payload) {},
+      onDidReceiveNotificationResponse: (payload) {
+        handleMessage(context,message);
+      },
     );
   }
 
@@ -87,13 +91,20 @@ class NotificationServices {
     });
   }
 
-  void firebaseInit() {
+  void firebaseInit(BuildContext context) {
     FirebaseMessaging.onMessage.listen((message) {
       if (kDebugMode) {
         print(message.notification!.title.toString());
         print(message.notification!.body.toString());
       }
-      showNotification(message);
+      if(Platform.isAndroid){
+        initLocalNotifications(context,message);
+        showNotification(message);
+      }
+      else{
+        showNotification(message);
+      }
+
     });
   }
 
@@ -107,5 +118,28 @@ class NotificationServices {
       event.toString();
       print("Refresh Token: $event");
     });
+  }
+
+  Future<void>setupInteractMessage(BuildContext context)async{
+
+    // when app is terminated
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if(initialMessage!=null){
+      handleMessage(context, initialMessage);
+    }
+
+    //when app is in background
+    FirebaseMessaging.onMessageOpenedApp.listen((event){
+      handleMessage(context, event);
+    });
+  }
+
+  void handleMessage(BuildContext context, RemoteMessage message){
+    if(message.data['type']=='msg'){
+      Navigator.push(context,MaterialPageRoute(builder: (context)=>MessageScreen(
+        id: message.data['id'],
+        msg: message.data['text'],
+      )));
+    }
   }
 }
